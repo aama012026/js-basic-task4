@@ -1,12 +1,58 @@
-originWheel = document.getElementById('origin-wheel');
+const originWheel = document.getElementById('origin-wheel');
+const toneWheelBox = document.getElementById('tone-wheel-box');
 
 const dotRadius = 2;
+
+let hueStops = 3;
+let saturationStops = 2;
+let lightnessStops = 3;
 
 let usercolor = {
 	h: getRandomValues(0, 360)[0],
 	s: getRandomValues(0, 1)[0],
 	l: getRandomValues(-1, 1)[0]
 };
+
+const colors = {
+	hues: [],
+	saturationLevels: [],
+	lightnessPoints: []
+};
+
+function generateColors() {
+	colors.hues = getHueShifts(usercolor.h, hueStops);
+	colors.saturationLevels = getSaturationLevels(usercolor.s, saturationStops);
+	colors.lightnessPoints = getLightnessPoints(usercolor.l, lightnessStops);
+}
+
+function getHueShifts(inputHue, stops) {
+	const step = 360 / stops;
+	const hues = [];
+	for (let i = 0; i < stops; i++) {
+		hues[i] = (inputHue + step * i) % 360;
+	}
+	return hues;
+}
+
+function getSaturationLevels(inputSaturation, saturationStops) {
+	const scaledSaturation = inputSaturation * saturationStops;
+	const saturationFraction = getRest(scaledSaturation);
+	const saturationLevels = [];
+	for(let i = 0; i < saturationStops; i++) {
+		saturationLevels[i] = (i + saturationFraction) / saturationStops; 
+	}
+	return saturationLevels;
+}
+
+function getLightnessPoints(inputLightness, lightnessStops) {
+	const lightnessFraction = getRest(getPositiveFromNormalizedBipolar(inputLightness) * lightnessStops);
+	const lightnessPoints = [];
+	for(let i = 0; i < lightnessStops; i++) {
+		const placementInStop = i > (lightnessStops / 2) ? lightnessFraction : 1 - lightnessFraction;
+		lightnessPoints[i] = getBipolarFromNormalizedPositive((i + placementInStop) / lightnessStops);
+	}
+	return lightnessPoints;
+}
 
 function getRandomValues(minValue, maxValue, count = 1, returnInteger = false) {
 	const UINT_32_MAX = 4294967296;
@@ -24,11 +70,10 @@ function getRandomValues(minValue, maxValue, count = 1, returnInteger = false) {
 
 function createColorDot(parent, color) {
 	const position = cartesianFromPolar(color.s, color.h);
-	console.log(position);
 	const dot = document.createElement('span');
 	dot.classList.add('circle');
 	dot.style.width = `${dotRadius}rem`;
-	dot.style.background = `hsl(${color.h} ${color.s*100} 50)`;
+	dot.style.background = `hsl(${color.h} ${color.s*100} ${color.l})`;
 	dot.style.position = 'absolute';
 	dot.style.left = `calc(50% + ${position.x} * 50% - ${dotRadius}rem/2)`;
 	dot.style.bottom = `calc(50% + ${position.y} * 50% - ${dotRadius}rem/2)`;
@@ -38,12 +83,35 @@ function createColorDot(parent, color) {
 	parent.appendChild(dot);
 }
 
+function createToneWheel(container, lightness) {
+	const toneWheel = document.createElement('span');
+	const lightnessCssValue = getPositiveFromNormalizedBipolar(lightness) * 100;
+	toneWheel.style.setProperty('--lightness', `${lightnessCssValue}`);
+	toneWheel.classList.add('circle', 'tone-wheel');
+	toneWheel.style.width = `calc(var(--circle-radius) * (1 - ${Math.abs(lightness)})`;
+	toneWheel.dataset.lightness = lightnessCssValue;
+	container.appendChild(toneWheel);
+}
+
 function cartesianFromPolar(r, a) {
 	const radianAngle = a * (Math.PI / 180);
 	return { x: r * Math.cos(radianAngle), y: r * Math.sin(radianAngle) }
 }
-function getPositiveFromNormalizedBipolar(n) { return (n + 1) / 2 }
+
+function getRest(n) { return n < 1 ? n : n % Math.floor(n) }
+function getPositiveFromNormalizedBipolar(n) { return (n + 1) * 0.5 }
 function getBipolarFromNormalizedPositive(n) { return n * 2 - 1 }
 
 console.log(usercolor);
-createColorDot(originWheel, usercolor);
+generateColors();
+console.log(colors);
+
+colors.lightnessPoints.forEach((l) => {
+	createToneWheel(toneWheelBox, l);
+});
+toneWheelBox.querySelectorAll('.tone-wheel').forEach((wheel) => {
+	colors.saturationLevels.forEach((s) => {
+		console.log(wheel.dataset.lightness);
+		colors.hues.forEach((h) => createColorDot(wheel, {h: h, s: s, l: wheel.dataset.lightness}));
+	});
+});
