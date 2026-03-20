@@ -1,0 +1,60 @@
+:root {
+	--lightness: 50;
+	--saturation: 100%;
+	--pure-hues: conic-gradient(in hsl increasing hue,
+			hsl(0 100 var(--lightness)),
+			hsl(120 100 var(--lightness)),
+			hsl(240 100 var(--lightness)),
+			hsl(360 100 var(--lightness)));
+	--saturation-overlay: radial-gradient(hsl(none 0 var(--lightness)), transparent);
+	--saturation-outline-weight: 0.5rem;
+	--circle-radius: 25rem;
+}
+
+body {
+	color: white;
+	background: black;
+}
+
+.circle {
+	width: var(--circle-radius);
+	aspect-ratio: 1 / 1;
+	border-radius: 50%;
+
+
+}
+
+.tone-wheel {
+	background:
+		radial-gradient(closest-side, hsl(none 0 var(--lightness)), transparent),
+		conic-gradient(from 90deg in hsl decreasing hue,
+			hsl(360 100 var(--lightness)),
+			hsl(240 100 var(--lightness)),
+			hsl(120 100 var(--lightness)),
+			hsl(0 100 var(--lightness)));
+	
+	position: relative;
+	z-index: 1;
+	cursor: pointer;
+	outline: var(--saturation-outline-weight) solid hsl(none 0 var(--lightness));
+	
+	&:before {
+		content: "";
+		position: absolute;
+		z-index: 0;
+		--weight: 2px;
+		--offset: calc(1px - var(--weight) - var(--saturation-outline-weight));
+		top: var(--offset);
+		right: var(--offset);
+		bottom: var(--offset);
+		left: var(--offset);
+		border: var(--weight) solid white;
+		border-radius: 50%;
+	}
+}
+
+.flex-h {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
