@@ -123,15 +123,12 @@ function updateColorDot(dot, color) {
 
 function createToneWheel(container, lightness) {
 	const toneWheel = document.createElement('span');
-	const lightnessCssValue = getPercentFromNormalizedBipolar(lightness);
-	toneWheel.style.setProperty('--lightness', `${lightnessCssValue}`);
 	toneWheel.classList.add('circle', 'tone-wheel');
-	toneWheel.style.width = `calc(var(--circle-radius) * (1 - ${Math.abs(lightness)})`;
-	toneWheel.dataset.lightness = lightness;
+	updateToneWheel(toneWheel, lightness);
 	container.appendChild(toneWheel);
 }
 
-function updateToneWheel(element, lightness) {
+function updateToneWheel(toneWheel, lightness) {
 	const lightnessCssValue = getPercentFromNormalizedBipolar(lightness);
 	toneWheel.style.setProperty('--lightness', `${lightnessCssValue}`);
 	toneWheel.style.width = `calc(var(--circle-radius)) * (1 - ${Math.abs(lightness)})`;
@@ -167,6 +164,27 @@ console.log(usercolor);
 generateColorComponents();
 console.log(colors);
 
+function render() {
+	toneWheels = toneWheelBox.querySelectorAll('.tone-wheel');
+	colors.lightnessPoints.forEach((l, i) => {
+		if (i < toneWheels.length) {
+			updateToneWheel(toneWheels[i], l);
+		}
+		else {
+			createToneWheel(toneWheelBox, l);
+		}
+	});
+}
+
+function cleanUp() {
+	toneWheels = toneWheelBox.querySelectorAll('.tone-wheel');
+	difference = toneWheels.length - colors.lightnessPoints.length;
+	if (difference < 0) {
+		for(let i = colors.lightnessPoints.length; i < toneWheels.length; i++) {
+			// remove excess elements and their children.
+		}
+	}
+}
 colors.lightnessPoints.forEach((l) => {
 	createToneWheel(toneWheelBox, l);
 });
@@ -176,3 +194,4 @@ toneWheelBox.querySelectorAll('.tone-wheel').forEach((wheel) => {
 		colors.hues.forEach((h) => createColorDot(wheel, {h: h, s: s, l: wheel.dataset.lightness}));
 	});
 });
+render();
