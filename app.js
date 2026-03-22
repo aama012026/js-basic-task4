@@ -1,7 +1,7 @@
 const originWheel = document.getElementById('origin-wheel');
 const toneWheelBox = document.getElementById('tone-wheel-box');
 
-const dotRadius = 2;
+const dotRadius = 4;
 
 let hueStops = 3;
 let saturationStops = 2;
@@ -10,7 +10,7 @@ let lightnessStops = 3;
 let usercolor = {
 	h: getRandomValues(0, 360)[0],
 	s: getRandomValues(0, 1)[0],
-	l: 0
+	l: getRandomValues(0, 1)[0]
 };
 
 let isDragging = false;
@@ -47,6 +47,8 @@ function updateUserDot(e) {
 	usercolor.h = polarCoord.angle;
 	usercolor.s = polarCoord.radius;
 	updateColorDot(userColorDot, usercolor);
+	generateColorComponents();
+	render();
 }
 
 function generateColorComponents() {
@@ -113,7 +115,7 @@ function createColorDot(parent, color) {
 function updateColorDot(dot, color) {
 	const position = cartesianFromPolar(color.s, color.h);
 	const cssHsl = getCssHsl(color);
-	const dotSize = dotRadius/2 * (1 - Math.abs(color.l)) + dotRadius/2;
+	const dotSize = dotRadius * (1 - Math.abs(color.l)) *0.75 + dotRadius*0.25;
 	
 	dot.style.width = `${dotSize}rem`;
 	dot.style.background = `hsl(${cssHsl.h} ${cssHsl.s} ${cssHsl.l})`;
@@ -131,7 +133,7 @@ function createToneWheel(container, lightness) {
 function updateToneWheel(toneWheel, lightness) {
 	const lightnessCssValue = getPercentFromNormalizedBipolar(lightness);
 	toneWheel.style.setProperty('--lightness', `${lightnessCssValue}`);
-	toneWheel.style.width = `calc(var(--circle-radius)) * (1 - ${Math.abs(lightness)})`;
+	toneWheel.style.width = `calc(var(--circle-radius) * (1 - ${Math.abs(lightness)}))`;
 	toneWheel.dataset.lightness = lightness;
 }
 
@@ -153,7 +155,7 @@ function polarFromCartesian(x, y) {
 	return {radius: r, angle: a < 0 ? a + 360 : a};
 }
 
-function getRest(n) { return n < 1 ? n : n % Math.floor(n) }
+function getRest(n) { return n % 1 }
 function getRatioFromNormalizedBipolar(n) { return (n + 1) * 0.5 }
 function getBipolarFromNormalizedRatio(n) { return n * 2 - 1 }
 
@@ -165,7 +167,7 @@ generateColorComponents();
 console.log(colors);
 
 function render() {
-	toneWheels = toneWheelBox.querySelectorAll('.tone-wheel');
+	let toneWheels = toneWheelBox.querySelectorAll('.tone-wheel');
 	colors.lightnessPoints.forEach((l, i) => {
 		if (i < toneWheels.length) {
 			updateToneWheel(toneWheels[i], l);
@@ -174,24 +176,48 @@ function render() {
 			createToneWheel(toneWheelBox, l);
 		}
 	});
+
+	toneWheels = toneWheelBox.querySelectorAll('.tone-wheel');
+	cleanUpToneWheels(toneWheels);
+	toneWheels.forEach((wheel) => {
+		renderColorDots(wheel);
+	});
 }
 
-function cleanUp() {
-	toneWheels = toneWheelBox.querySelectorAll('.tone-wheel');
-	difference = toneWheels.length - colors.lightnessPoints.length;
-	if (difference < 0) {
+function renderColorDots(wheel) {
+	let dots = wheel.querySelectorAll('.circle');
+	const l = parseFloat(wheel.dataset.lightness);
+	colors.saturationLevels.forEach((s, i) => {
+		colors.hues.forEach((h, j) => {
+			const k = colors.hues.length * i + j; 
+			if (k < dots.length) {
+				updateColorDot(dots[k], {h: h, s: s, l: l});
+			}
+			else {
+				createColorDot(wheel, {h: h, s: s, l: l});
+			}
+		})
+	});
+	dots = wheel.querySelectorAll('.circle');
+	cleanUpDots(dots);
+}
+
+function cleanUpToneWheels(toneWheels) {
+	const difference = toneWheels.length - colors.lightnessPoints.length;
+	if (difference > 0) {
 		for(let i = colors.lightnessPoints.length; i < toneWheels.length; i++) {
-			// remove excess elements and their children.
+			toneWheels[i].parentNode.removeChild(toneWheels[i]);
 		}
 	}
 }
-colors.lightnessPoints.forEach((l) => {
-	createToneWheel(toneWheelBox, l);
-});
-toneWheelBox.querySelectorAll('.tone-wheel').forEach((wheel) => {
-	colors.saturationLevels.forEach((s) => {
-		console.log(wheel.dataset.lightness);
-		colors.hues.forEach((h) => createColorDot(wheel, {h: h, s: s, l: wheel.dataset.lightness}));
-	});
-});
+
+function cleanUpDots(dots) {
+	const colorCount = colors.hues * colors.saturationLevels;
+	const difference = dots.length - colorCount;
+	if (difference > 0) {
+		for(let i = colorCount; i < dots.length; i++) {
+			dots[i].parentNode.removeChild(dots[i]);
+		}
+	}
+}
 render();
