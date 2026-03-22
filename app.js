@@ -40,16 +40,16 @@ document.addEventListener('mouseup', () => isDragging = false );
 function updateUserDot(e) {
 	const boundingBox = originWheel.getBoundingClientRect();
 	const cartesianCoord = {
-		x: getBipolarFromNormalizedPositive((e.clientX - boundingBox.left) / boundingBox.width),
-		y: getBipolarFromNormalizedPositive(1 - ((e.clientY - boundingBox.top) / boundingBox.height))
+		x: getBipolarFromNormalizedRatio((e.clientX - boundingBox.left) / boundingBox.width),
+		y: getBipolarFromNormalizedRatio(1 - ((e.clientY - boundingBox.top) / boundingBox.height))
 	};
 	const polarCoord = polarFromCartesian(cartesianCoord.x, cartesianCoord.y);
 	usercolor.h = polarCoord.angle;
 	usercolor.s = polarCoord.radius;
-	moveColorDot(userColorDot, usercolor);
+	updateColorDot(userColorDot, usercolor);
 }
 
-function generateColors() {
+function generateColorComponents() {
 	colors.hues = getHueShifts(usercolor.h, hueStops);
 	colors.saturationLevels = getSaturationLevels(usercolor.s, saturationStops);
 	colors.lightnessPoints = getLightnessPoints(usercolor.l, lightnessStops);
@@ -75,11 +75,11 @@ function getSaturationLevels(inputSaturation, saturationStops) {
 }
 
 function getLightnessPoints(inputLightness, lightnessStops) {
-	const lightnessFraction = getRest(getPositiveFromNormalizedBipolar(inputLightness) * lightnessStops);
+	const lightnessFraction = getRest(getRatioFromNormalizedBipolar(inputLightness) * lightnessStops);
 	const lightnessPoints = [];
 	for(let i = 0; i < lightnessStops; i++) {
 		const placementInStop = i > (lightnessStops / 2) ? lightnessFraction : 1 - lightnessFraction;
-		lightnessPoints[i] = getBipolarFromNormalizedPositive((i + placementInStop) / lightnessStops);
+		lightnessPoints[i] = getBipolarFromNormalizedRatio((i + placementInStop) / lightnessStops);
 	}
 	return lightnessPoints;
 }
@@ -102,32 +102,48 @@ function createColorDot(parent, color) {
 	const position = cartesianFromPolar(color.s, color.h);
 	const dot = document.createElement('span');
 	dot.classList.add('circle');
-	dot.style.width = `${dotRadius}rem`;
-	dot.style.background = `hsl(${color.h} ${color.s*100} ${getPositiveFromNormalizedBipolar(color.l)*100})`;
 	dot.style.position = 'absolute';
-	dot.style.left = `calc(50% + ${position.x} * 50% - ${dotRadius}rem/2)`;
-	dot.style.bottom = `calc(50% + ${position.y} * 50% - ${dotRadius}rem/2)`;
 	dot.style.zIndex = '2';
 	dot.style.outline = '2px solid white';
 	dot.style.outlineOffset = '-1px';
+	updateColorDot(dot, color);
 	parent.appendChild(dot);
 }
 
-function moveColorDot(element, color) {
+function updateColorDot(dot, color) {
 	const position = cartesianFromPolar(color.s, color.h);
-	element.style.background = `hsl(${color.h} ${color.s * 100} ${getPositiveFromNormalizedBipolar(color.l) * 100})`;
-	element.style.left = `calc(50% + ${position.x} * 50% - ${dotRadius}rem/2)`;
-	element.style.bottom = `calc(50% + ${position.y} * 50% - ${dotRadius}rem/2)`;
+	const cssHsl = getCssHsl(color);
+	const dotSize = dotRadius/2 * (1 - Math.abs(color.l)) + dotRadius/2;
+	
+	dot.style.width = `${dotSize}rem`;
+	dot.style.background = `hsl(${cssHsl.h} ${cssHsl.s} ${cssHsl.l})`;
+	dot.style.left = `calc(50% + ${position.x} * 50% - ${dotSize}rem / 2)`;
+	dot.style.bottom = `calc(50% + ${position.y} * 50% - ${dotSize}rem / 2)`;
 }
 
 function createToneWheel(container, lightness) {
 	const toneWheel = document.createElement('span');
-	const lightnessCssValue = getPositiveFromNormalizedBipolar(lightness) * 100;
+	const lightnessCssValue = getPercentFromNormalizedBipolar(lightness);
 	toneWheel.style.setProperty('--lightness', `${lightnessCssValue}`);
 	toneWheel.classList.add('circle', 'tone-wheel');
 	toneWheel.style.width = `calc(var(--circle-radius) * (1 - ${Math.abs(lightness)})`;
 	toneWheel.dataset.lightness = lightness;
 	container.appendChild(toneWheel);
+}
+
+function updateToneWheel(element, lightness) {
+	const lightnessCssValue = getPercentFromNormalizedBipolar(lightness);
+	toneWheel.style.setProperty('--lightness', `${lightnessCssValue}`);
+	toneWheel.style.width = `calc(var(--circle-radius)) * (1 - ${Math.abs(lightness)})`;
+	toneWheel.dataset.lightness = lightness;
+}
+
+function getCssHsl(color) {
+	return {
+		h: color.h,
+		s: getPercentFromRatio(color.s),
+		l: getPercentFromNormalizedBipolar(color.l)
+	}
 }
 
 function cartesianFromPolar(r, a) {
@@ -141,11 +157,14 @@ function polarFromCartesian(x, y) {
 }
 
 function getRest(n) { return n < 1 ? n : n % Math.floor(n) }
-function getPositiveFromNormalizedBipolar(n) { return (n + 1) * 0.5 }
-function getBipolarFromNormalizedPositive(n) { return n * 2 - 1 }
+function getRatioFromNormalizedBipolar(n) { return (n + 1) * 0.5 }
+function getBipolarFromNormalizedRatio(n) { return n * 2 - 1 }
+
+function getPercentFromRatio(n) { return n * 100 }
+function getPercentFromNormalizedBipolar(n) { return (n + 1) * 50 }
 
 console.log(usercolor);
-generateColors();
+generateColorComponents();
 console.log(colors);
 
 colors.lightnessPoints.forEach((l) => {
