@@ -12,19 +12,71 @@
 <body>
 	<h1>HSL explorer</h1>
 	<main>
-		<div class="flex-h">
-			<div class="grid-2c">
+		<div class="balanced-flex fill-long centered">
+			<div class="grid-2c centered">
 				<h2>toggle</h2>
 				<label for="enable-hue">H</label>
-				<input id="enable-hue" name="enable-hue" type="checkbox" checked>
+				<input id="enable-hue" name="enable-hue"
+					type="checkbox" checked
+				>
 				<label for="enable-saturation">S</label>
-				<input id="enable-saturation" name="enable-saturation" type="checkbox" checked>
+				<input id="enable-saturation" name="enable-saturation"
+					type="checkbox" checked
+				>
 				<label for="enable-lightness">L</label>
-				<input id="enable-lightness" name="enable-lightness" type="checkbox" checked>
+				<input id="enable-lightness" name="enable-lightness"
+					type="checkbox" checked
+				>
 			</div>
 			<span id="origin-wheel" class="circle tone-wheel"></span>
+			<div class="grid-3c centered">
+				<h2>stops</h2>
+				
+				<button id="decrease-hue" aria-label="Decrease hue stops"
+					aria-controls="hue-stops">-
+				</button>
+				<input id="hue-stops" inputmode="numeric"
+					pattern="-?[0-9]*" role="spinbutton"
+					aria-label="Hue stops" aria-valuemin="1"
+					aria-valuemax="100" aria-valuenow="2" value="2"
+				>
+				<button id="increase-hue" aria-label="Increase hue stops"
+					aria-controls="hue-stops">+
+				</button>
+				
+				<button id="decrease-saturation"
+					aria-label="Decrease saturation stops"
+					aria-controls="saturation-stops">-
+				</button>
+				<input id="saturation-stops" inputmode="numeric"
+					pattern="-?[0-9]*" role="spinbutton"
+					aria-label="Saturation stops" aria-valuemin="1"
+					aria-valuemax="10" aria-valuenow="3" value="3"
+				>
+				<button id="increase-saturation"
+					aria-label="Increase saturation stops"
+					aria-controls="saturation-stops">+
+				</button>
+				
+				<button id="decrease-lightness"
+					aria-label="Decrease lightness stops"
+					aria-controls="lightness-stops">-
+				</button>
+				<input id="lightness-stops" inputmode="numeric"
+					pattern="-?[0-9]*" role="spinbutton"
+					aria-label="Lightness stops" aria-valuemin="1"
+					aria-valuemax="10" aria-valuenow="3" value="3"
+				>
+				<button id="increase-lightness"
+					aria-label="Increase lightness stops"
+					aria-controls="lightness-stops">+
+				</button>
+			</div>
 		</div>
-		<div id="tone-wheel-box" class="flex-h"></div>
+		<input class="fill-long" id="input-color-lightness" type="range"
+			min="-1" max="1" step="any" value="0"
+		>
+		<div id="tone-wheel-box" class="balanced-flex fill-long"></div>
 	</main>
 </body>
 </html>

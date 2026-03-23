@@ -3,6 +3,29 @@ const toneWheelBox = document.getElementById('tone-wheel-box');
 
 const dotRadius = 4;
 
+const inputs = {
+	hue: {
+		checkbox: document.getElementById('enable-hue'),
+		stops: document.getElementById('hue-stops'),
+		decreaseBtn: document.getElementById('decrease-hue'),
+		increaseBtn: document.getElementById('increase-hue')
+	},
+	saturation: {
+		checkbox: document.getElementById('enable-saturation'),
+		stops: document.getElementById('saturation-stops'),
+		decreaseBtn: document.getElementById('decrease-saturation'),
+		increaseBtn: document.getElementById('increase-saturation')
+	},
+	lightness: {
+		checkbox: document.getElementById('enable-lightness'),
+		stops: document.getElementById('lightness-stops'),
+		decreaseBtn: document.getElementById('decrease-lightness'),
+		increaseBtn: document.getElementById('increase-lightness')
+	}
+}
+
+
+
 let hueStops = 4;
 let saturationStops = 3;
 let lightnessStops = 5;
@@ -24,6 +47,7 @@ const colors = {
 	lightnessPoints: []
 };
 
+// getting and rendering selected color
 originWheel.addEventListener('mousedown', (e) => {
 	isDragging = true;
 	updateUserDot(e);	
@@ -52,9 +76,9 @@ function updateUserDot(e) {
 }
 
 function generateColorComponents() {
-	colors.hues = getHueShifts(usercolor.h, hueStops);
-	colors.saturationLevels = getSaturationLevels(usercolor.s, saturationStops);
-	colors.lightnessPoints = getLightnessPoints(usercolor.l, lightnessStops);
+	colors.hues = getHueShifts(usercolor.h, inputs.hue.checkbox.checked ? hueStops : 1);
+	colors.saturationLevels = getSaturationLevels(usercolor.s, inputs.saturation.checkbox.checked ? saturationStops : 1);
+	colors.lightnessPoints = getLightnessPoints(usercolor.l, inputs.hue.checkbox.checked ? lightnessStops : 1);
 }
 
 function getHueShifts(inputHue, stops) {
@@ -162,9 +186,7 @@ function getBipolarFromNormalizedRatio(n) { return n * 2 - 1 }
 function getPercentFromRatio(n) { return n * 100 }
 function getPercentFromNormalizedBipolar(n) { return (n + 1) * 50 }
 
-console.log(usercolor);
 generateColorComponents();
-console.log(colors);
 
 function render() {
 	let toneWheels = toneWheelBox.querySelectorAll('.tone-wheel');
