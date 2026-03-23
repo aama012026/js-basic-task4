@@ -3,9 +3,9 @@ const toneWheelBox = document.getElementById('tone-wheel-box');
 
 const dotRadius = 4;
 
-let hueStops = 3;
-let saturationStops = 2;
-let lightnessStops = 3;
+let hueStops = 4;
+let saturationStops = 3;
+let lightnessStops = 5;
 
 let usercolor = {
 	h: getRandomValues(0, 360)[0],

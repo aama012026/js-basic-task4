@@ -63,3 +63,13 @@ body {
 	align-items: center;
 	justify-content: space-around;
 }
+
+.grid-2c {
+	display: grid;
+	grid-template-columns: auto auto;
+	& :first-child {
+		grid-column: span 2;
+	}
+	align-items: center;
+	justify-items: center;
+}
