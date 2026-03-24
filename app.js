@@ -1,7 +1,8 @@
 const originWheel = document.getElementById('origin-wheel');
+const originLightnessSlider = document.getElementById('input-color-lightness');
 const toneWheelBox = document.getElementById('tone-wheel-box');
 
-const dotRadius = 4;
+const dotRadius = 2;
 
 const inputs = {
 	hue: {
@@ -24,16 +25,10 @@ const inputs = {
 	}
 }
 
-
-
-let hueStops = 4;
-let saturationStops = 3;
-let lightnessStops = 5;
-
 let usercolor = {
 	h: getRandomValues(0, 360)[0],
 	s: getRandomValues(0, 1)[0],
-	l: getRandomValues(0, 1)[0]
+	l: 0
 };
 
 let isDragging = false;
@@ -50,16 +45,59 @@ const colors = {
 // getting and rendering selected color
 originWheel.addEventListener('mousedown', (e) => {
 	isDragging = true;
-	updateUserDot(e);	
+	updateUserDot(e);
+	generateColorComponents();
+	render();
 });
 
 originWheel.addEventListener('mousemove', (e) => {
  	if (isDragging) {
 		updateUserDot(e);
+		generateColorComponents();
+		render();
 	}
 });
 
 document.addEventListener('mouseup', () => isDragging = false );
+
+originLightnessSlider.addEventListener('input', () => {
+	usercolor.l = parseFloat(originLightnessSlider.value);
+	console.log(originLightnessSlider.value);
+	updateToneWheel(originWheel, usercolor.l);
+	updateColorDot(userColorDot, usercolor);
+	generateColorComponents();
+	render();
+});
+
+inputs.hue.checkbox.addEventListener('input', () => {
+	generateColorComponents();
+	render();
+});
+
+inputs.saturation.checkbox.addEventListener('input', () => {
+	generateColorComponents();
+	render();
+});
+
+inputs.lightness.checkbox.addEventListener('input', () => {
+	generateColorComponents();
+	render();
+});
+
+inputs.hue.stops.addEventListener('blur', () => {
+	generateColorComponents();
+	render();
+})
+inputs.hue.increaseBtn.addEventListener('mouseup', () => {
+	changeSpinNumber(inputs.hue.stops, inputs.hue.decreaseBtn, inputs.hue.increaseBtn, 1);
+	generateColorComponents();
+	render();
+});
+inputs.hue.decreaseBtn.addEventListener('mouseup', () => {
+	changeSpinNumber(inputs.hue.stops, inputs.hue.decreaseBtn, inputs.hue.increaseBtn, -1);
+	generateColorComponents();
+	render();
+});
 
 function updateUserDot(e) {
 	const boundingBox = originWheel.getBoundingClientRect();
@@ -71,14 +109,13 @@ function updateUserDot(e) {
 	usercolor.h = polarCoord.angle;
 	usercolor.s = polarCoord.radius;
 	updateColorDot(userColorDot, usercolor);
-	generateColorComponents();
-	render();
+
 }
 
 function generateColorComponents() {
-	colors.hues = getHueShifts(usercolor.h, inputs.hue.checkbox.checked ? hueStops : 1);
-	colors.saturationLevels = getSaturationLevels(usercolor.s, inputs.saturation.checkbox.checked ? saturationStops : 1);
-	colors.lightnessPoints = getLightnessPoints(usercolor.l, inputs.hue.checkbox.checked ? lightnessStops : 1);
+	colors.hues = getHueShifts(usercolor.h, inputs.hue.checkbox.checked ? parseFloat(inputs.hue.stops.value) : 1);
+	colors.saturationLevels = getSaturationLevels(usercolor.s, inputs.saturation.checkbox.checked ? parseFloat(inputs.saturation.stops) : 1);
+	colors.lightnessPoints = getLightnessPoints(usercolor.l, inputs.lightness.checkbox.checked ? parseFloat(inputs.lightness.stops) : 1);
 }
 
 function getHueShifts(inputHue, stops) {
@@ -157,7 +194,7 @@ function createToneWheel(container, lightness) {
 function updateToneWheel(toneWheel, lightness) {
 	const lightnessCssValue = getPercentFromNormalizedBipolar(lightness);
 	toneWheel.style.setProperty('--lightness', `${lightnessCssValue}`);
-	toneWheel.style.width = `calc(var(--circle-radius) * (1 - ${Math.abs(lightness)}))`;
+	toneWheel.style.width = `calc(var(--circle-radius)/2 + var(--circle-radius)/2 * (1 - ${Math.abs(lightness)}))`;
 	toneWheel.dataset.lightness = lightness;
 }
 
@@ -186,7 +223,34 @@ function getBipolarFromNormalizedRatio(n) { return n * 2 - 1 }
 function getPercentFromRatio(n) { return n * 100 }
 function getPercentFromNormalizedBipolar(n) { return (n + 1) * 50 }
 
-generateColorComponents();
+function changeSpinNumber(input, decrementer, incrementer, valueChange) {
+	const currentValue = parseFloat(input.value);
+	const targetValue = currentValue + valueChange;
+
+	setSpinNumber(input, decrementer, incrementer, targetValue);
+}
+
+function setSpinNumber(input, decrementer, incrementer, targetValue) {
+	const minValue = parseFloat(input.ariaValueMin);
+	const maxValue = parseFloat(input.ariaValueMax);
+
+	if (targetValue <= minValue) {
+		input.value = minValue;
+		decrementer.disabled = true;
+		incrementer.disabled = false;
+	}
+	else if (targetValue >= maxValue) {
+		input.value = maxValue;
+		decrementer.disabled = false;
+		incrementer.disabled = true;
+	}
+	else {
+		input.value = targetValue;
+		decrementer.disabled = false;
+		incrementer.disabled = false;
+	}
+	input.ariaValueNow = input.value;
+}
 
 function render() {
 	let toneWheels = toneWheelBox.querySelectorAll('.tone-wheel');
@@ -228,18 +292,19 @@ function cleanUpToneWheels(toneWheels) {
 	const difference = toneWheels.length - colors.lightnessPoints.length;
 	if (difference > 0) {
 		for(let i = colors.lightnessPoints.length; i < toneWheels.length; i++) {
-			toneWheels[i].parentNode.removeChild(toneWheels[i]);
+			toneWheels[i].remove();
 		}
 	}
 }
 
 function cleanUpDots(dots) {
-	const colorCount = colors.hues * colors.saturationLevels;
+	const colorCount = colors.hues.length * colors.saturationLevels.length;
 	const difference = dots.length - colorCount;
 	if (difference > 0) {
 		for(let i = colorCount; i < dots.length; i++) {
-			dots[i].parentNode.removeChild(dots[i]);
+			dots[i].remove();
 		}
 	}
 }
+generateColorComponents();
 render();

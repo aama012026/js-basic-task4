@@ -69,6 +69,7 @@ input[type=checkbox], input[inputmode=numeric], button {
 	font-size: 1rem;
 	font-weight: 600;
 	text-align: center;
+	border: 2px solid white;
 	border-radius: 50%;
 	width: 3ch;
 	aspect-ratio: 1/1;
@@ -164,6 +165,14 @@ label {
 		width: 100%;
 		height: auto;
 		flex-direction: row;
+	}
+
+	.grid-2c {
+		grid: auto auto / repeat(6, auto);
+
+		& :first-child{
+			grid-column: span 6;
+		}
 	}
 	
 	input[type=range] {
