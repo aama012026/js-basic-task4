@@ -73,6 +73,15 @@ input[type=checkbox], input[inputmode=numeric], button {
 	border-radius: 50%;
 	width: 3ch;
 	aspect-ratio: 1/1;
+
+	&:hover {
+		outline: 2px solid white;
+		outline-offset: 2px;
+	}
+
+	&:disabled {
+		opacity: 0.7;
+	}
 }
 
 .balanced-flex {
